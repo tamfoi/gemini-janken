@@ -77,7 +77,7 @@ describe('Janken', () => {
     janken.setPlayer2Hand(Hand.CHOKI);
     janken.playRound();
     expect(janken.getLastResult()).toEqual(Result.P1_WIN);
-    janken.reset();
+    janken.startGame();
     expect(janken.getLastResult()).toBeNull();
     expect(janken.getPlayer1Hand()).toBeNull();
     expect(janken.getPlayer2Hand()).toBeNull();
@@ -99,16 +99,16 @@ describe('Janken', () => {
     expect(afterRoundListener).toHaveBeenCalledWith(Result.P1_WIN);
   });
 
-  it('"reset"イベントを発火する', () => {
-    const resetListener = vi.fn();
-    janken.on(JankenEvent.Reset, resetListener);
+  it('"gameStarted"イベントを発火する', () => {
+    const gameStartedListener = vi.fn();
+    janken.on(JankenEvent.GameStarted, gameStartedListener);
 
     janken.setPlayer1Hand(Hand.GU);
     janken.setPlayer2Hand(Hand.CHOKI);
     janken.playRound();
-    janken.reset();
+    janken.startGame();
 
-    expect(resetListener).toHaveBeenCalledTimes(1);
+    expect(gameStartedListener).toHaveBeenCalledTimes(1);
   });
 
   it('手が出揃っていないときに"handsNotSet"イベントを発火する', () => {
@@ -119,6 +119,17 @@ describe('Janken', () => {
     janken.playRound(); // player2HandがnullなのでhandsNotSetが発火する
 
     expect(handsNotSetListener).toHaveBeenCalledTimes(1);
+  });
+
+  it('プレイヤーの手が更新されたときに"playerHandUpdated"イベントを発火する', () => {
+    const playerHandUpdatedListener = vi.fn();
+    janken.on(JankenEvent.PlayerHandUpdated, playerHandUpdatedListener);
+
+    janken.setPlayer1Hand(Hand.GU);
+    expect(playerHandUpdatedListener).toHaveBeenCalledWith(1, Hand.GU);
+    janken.setPlayer2Hand(Hand.CHOKI);
+    expect(playerHandUpdatedListener).toHaveBeenCalledWith(2, Hand.CHOKI);
+    expect(playerHandUpdatedListener).toHaveBeenCalledTimes(2);
   });
 
   it('現在のゲームフェーズを返す', () => {
@@ -133,7 +144,17 @@ describe('Janken', () => {
     janken.playRound();
     expect(janken.getPhase()).toEqual(GamePhase.RoundEnd);
 
-    janken.reset();
+    janken.startGame();
     expect(janken.getPhase()).toEqual(GamePhase.Ready);
+  });
+
+  it('両方の手が出揃っているか判定する', () => {
+    expect(janken.areHandsSet()).toBeFalsy();
+    janken.setPlayer1Hand(Hand.GU);
+    expect(janken.areHandsSet()).toBeFalsy();
+    janken.setPlayer2Hand(Hand.CHOKI);
+    expect(janken.areHandsSet()).toBeTruthy();
+    janken.startGame();
+    expect(janken.areHandsSet()).toBeFalsy();
   });
 });

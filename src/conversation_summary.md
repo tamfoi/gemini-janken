@@ -53,3 +53,15 @@
 
 - `package.json` に `build` スクリプト (`tsc`) を追加しました。
 - `tsconfig.json` の `exclude` オプションを修正し、テストファイルがビルド出力に含まれないようにしました。
+
+## 8. 機能改善とリファクタリング
+
+- `reset` メソッドを `startGame` にリネームし、関連するイベントリスナーを `JankenEvent.GameStarted` に更新しました。
+- プレイヤーが手を設定するたびに手が更新されたことを検知できる `JankenEvent.PlayerHandUpdated` イベントを追加しました。
+- 手が出揃っているか判定する `areHandsSet` メソッドを追加しました。
+- `playRound` メソッド内の勝敗判定ロジックを `_determineWinner` というプライベートヘルパーメソッドに抽出してリファクタリングしました。
+- `src/index.test.ts` と `src/usage.md` をこれらの変更に合わせて更新しました。
+
+## 9. 機能提案
+
+- じゃんけんゲームの機能拡張提案を `proposal.md` にまとめました。

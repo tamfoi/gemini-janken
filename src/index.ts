@@ -15,8 +15,9 @@ export enum Result {
 export enum JankenEvent {
   BeforeRound = "beforeRound",
   AfterRound = "afterRound",
-  Reset = "reset",
+  GameStarted = "gameStarted",
   HandsNotSet = "handsNotSet",
+  PlayerHandUpdated = "playerHandUpdated",
 }
 
 export enum GamePhase {
@@ -65,19 +66,7 @@ export class Janken {
       return null; // 両方の手が出されていない場合は判定できない
     }
 
-    let currentResult: Result;
-
-    if (this.player1Hand === this.player2Hand) {
-      currentResult = Result.DRAW;
-    } else if (
-      (this.player1Hand === Hand.GU && this.player2Hand === Hand.CHOKI) ||
-      (this.player1Hand === Hand.CHOKI && this.player2Hand === Hand.PA) ||
-      (this.player1Hand === Hand.PA && this.player2Hand === Hand.GU)
-    ) {
-      currentResult = Result.P1_WIN;
-    } else {
-      currentResult = Result.P2_WIN;
-    }
+    let currentResult: Result = this._determineWinner(this.player1Hand, this.player2Hand);
 
     this.lastResult = currentResult;
     this.emit(JankenEvent.AfterRound, currentResult);
@@ -87,6 +76,7 @@ export class Janken {
 
   setPlayer1Hand(hand: Hand): void {
     this.player1Hand = hand;
+    this.emit(JankenEvent.PlayerHandUpdated, 1, hand);
     if (this.player1Hand !== null && this.player2Hand !== null) {
       this._currentPhase = GamePhase.Playing;
     }
@@ -94,6 +84,7 @@ export class Janken {
 
   setPlayer2Hand(hand: Hand): void {
     this.player2Hand = hand;
+    this.emit(JankenEvent.PlayerHandUpdated, 2, hand);
     if (this.player1Hand !== null && this.player2Hand !== null) {
       this._currentPhase = GamePhase.Playing;
     }
@@ -103,12 +94,12 @@ export class Janken {
     return this.lastResult;
   }
 
-  reset(): void {
+  startGame(): void {
     this.lastResult = null;
     this.player1Hand = null;
     this.player2Hand = null;
     this._currentPhase = GamePhase.Ready;
-    this.emit(JankenEvent.Reset);
+    this.emit(JankenEvent.GameStarted);
   }
 
   getPlayer1Hand(): Hand | null {
@@ -121,5 +112,23 @@ export class Janken {
 
   getPhase(): GamePhase {
     return this._currentPhase;
+  }
+
+  areHandsSet(): boolean {
+    return this.player1Hand !== null && this.player2Hand !== null;
+  }
+
+  private _determineWinner(player1Hand: Hand, player2Hand: Hand): Result {
+    if (player1Hand === player2Hand) {
+      return Result.DRAW;
+    } else if (
+      (player1Hand === Hand.GU && player2Hand === Hand.CHOKI) ||
+      (player1Hand === Hand.CHOKI && player2Hand === Hand.PA) ||
+      (player1Hand === Hand.PA && player2Hand === Hand.GU)
+    ) {
+      return Result.P1_WIN;
+    } else {
+      return Result.P2_WIN;
+    }
   }
 }

@@ -14,13 +14,20 @@ janken.on(JankenEvent.AfterRound, (result: Result) => {
   console.log(`ラウンドが終了しました。結果: ${result}`);
 });
 
-janken.on(JankenEvent.Reset, () => {
-  console.log('じゃんけんの状態がリセットされました。');
+janken.on(JankenEvent.GameStarted, () => {
+  console.log('じゃんけんゲームが開始されました。');
 });
 
 janken.on(JankenEvent.HandsNotSet, () => {
   console.log('手が出揃っていません。両方のプレイヤーの手を設定してください。');
 });
+
+janken.on(JankenEvent.PlayerHandUpdated, (playerNumber: number, hand: Hand) => {
+  console.log(`プレイヤー${playerNumber}の手が${hand}に設定されました。`);
+});
+
+// 手が出揃っているか確認
+console.log(`手は出揃っているか: ${janken.areHandsSet()}`); // false
 
 // 現在のゲームフェーズを取得
 console.log(`現在のフェーズ: ${janken.getPhase()}`); // READY
@@ -43,7 +50,7 @@ const lastResult = janken.getLastResult();
 console.log(lastResult); // "P1_WIN"
 
 // 状態をリセット
-janken.reset();
+janken.startGame();
 console.log(janken.getLastResult()); // null
 console.log(`現在のフェーズ: ${janken.getPhase()}`); // READY
 
