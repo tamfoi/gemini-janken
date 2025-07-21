@@ -1,32 +1,30 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Janken = exports.GamePhase = exports.JankenEvent = exports.Result = exports.Hand = void 0;
-var Hand;
+export var Hand;
 (function (Hand) {
     Hand["GU"] = "GU";
     Hand["CHOKI"] = "CHOKI";
     Hand["PA"] = "PA";
-})(Hand || (exports.Hand = Hand = {}));
-var Result;
+})(Hand || (Hand = {}));
+export var Result;
 (function (Result) {
     Result["P1_WIN"] = "P1_WIN";
     Result["P2_WIN"] = "P2_WIN";
     Result["DRAW"] = "DRAW";
-})(Result || (exports.Result = Result = {}));
-var JankenEvent;
+})(Result || (Result = {}));
+export var JankenEvent;
 (function (JankenEvent) {
     JankenEvent["BeforeRound"] = "beforeRound";
     JankenEvent["AfterRound"] = "afterRound";
-    JankenEvent["Reset"] = "reset";
+    JankenEvent["GameStarted"] = "gameStarted";
     JankenEvent["HandsNotSet"] = "handsNotSet";
-})(JankenEvent || (exports.JankenEvent = JankenEvent = {}));
-var GamePhase;
+    JankenEvent["PlayerHandUpdated"] = "playerHandUpdated";
+})(JankenEvent || (JankenEvent = {}));
+export var GamePhase;
 (function (GamePhase) {
     GamePhase["Ready"] = "READY";
     GamePhase["Playing"] = "PLAYING";
     GamePhase["RoundEnd"] = "ROUND_END";
-})(GamePhase || (exports.GamePhase = GamePhase = {}));
-class Janken {
+})(GamePhase || (GamePhase = {}));
+export class Janken {
     constructor() {
         this._listeners = {};
         this._currentPhase = GamePhase.Ready;
@@ -60,18 +58,7 @@ class Janken {
             this.emit(JankenEvent.HandsNotSet);
             return null; // 両方の手が出されていない場合は判定できない
         }
-        let currentResult;
-        if (this.player1Hand === this.player2Hand) {
-            currentResult = Result.DRAW;
-        }
-        else if ((this.player1Hand === Hand.GU && this.player2Hand === Hand.CHOKI) ||
-            (this.player1Hand === Hand.CHOKI && this.player2Hand === Hand.PA) ||
-            (this.player1Hand === Hand.PA && this.player2Hand === Hand.GU)) {
-            currentResult = Result.P1_WIN;
-        }
-        else {
-            currentResult = Result.P2_WIN;
-        }
+        let currentResult = this._determineWinner(this.player1Hand, this.player2Hand);
         this.lastResult = currentResult;
         this.emit(JankenEvent.AfterRound, currentResult);
         this._currentPhase = GamePhase.RoundEnd;
@@ -79,12 +66,14 @@ class Janken {
     }
     setPlayer1Hand(hand) {
         this.player1Hand = hand;
+        this.emit(JankenEvent.PlayerHandUpdated, 1, hand);
         if (this.player1Hand !== null && this.player2Hand !== null) {
             this._currentPhase = GamePhase.Playing;
         }
     }
     setPlayer2Hand(hand) {
         this.player2Hand = hand;
+        this.emit(JankenEvent.PlayerHandUpdated, 2, hand);
         if (this.player1Hand !== null && this.player2Hand !== null) {
             this._currentPhase = GamePhase.Playing;
         }
@@ -92,12 +81,12 @@ class Janken {
     getLastResult() {
         return this.lastResult;
     }
-    reset() {
+    startGame() {
         this.lastResult = null;
         this.player1Hand = null;
         this.player2Hand = null;
         this._currentPhase = GamePhase.Ready;
-        this.emit(JankenEvent.Reset);
+        this.emit(JankenEvent.GameStarted);
     }
     getPlayer1Hand() {
         return this.player1Hand;
@@ -108,5 +97,20 @@ class Janken {
     getPhase() {
         return this._currentPhase;
     }
+    areHandsSet() {
+        return this.player1Hand !== null && this.player2Hand !== null;
+    }
+    _determineWinner(player1Hand, player2Hand) {
+        if (player1Hand === player2Hand) {
+            return Result.DRAW;
+        }
+        else if ((player1Hand === Hand.GU && player2Hand === Hand.CHOKI) ||
+            (player1Hand === Hand.CHOKI && player2Hand === Hand.PA) ||
+            (player1Hand === Hand.PA && player2Hand === Hand.GU)) {
+            return Result.P1_WIN;
+        }
+        else {
+            return Result.P2_WIN;
+        }
+    }
 }
-exports.Janken = Janken;

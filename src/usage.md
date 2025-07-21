@@ -58,4 +58,11 @@ console.log(`現在のフェーズ: ${janken.getPhase()}`); // READY
 const myListener = () => console.log('これは解除されるリスナーです。');
 janken.on('someEvent', myListener);
 janken.off('someEvent', myListener);
+
+// 利用イメージ
+const jankenExample = new Janken();
+jankenExample.setPlayer1Hand(Hand.GU);
+jankenExample.setPlayer2Hand(Hand.CHOKI);
+const exampleResult = jankenExample.playRound();
+console.log(exampleResult); // { result: "P1_WIN" }
 ```

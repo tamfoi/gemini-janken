@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Janken Demo</title>
+</head>
+
+<body>
+  <h1>Janken Demo</h1>
+  <div id="output"></div>
+
+  <script type="module">
+    import { Janken } from './index.js';
+
+    const outputDiv = document.getElementById('output');
+
+    try {
+      const janken = new Janken();
+
+      // Example 1: Player 1: GU, Player 2: CHOKI
+      janken.setPlayer1Hand(Janken.Hand.GU);
+      janken.setPlayer2Hand(Janken.Hand.CHOKI);
+      let result1 = janken.playRound();
+      outputDiv.innerHTML += `<p>Player 1: GU, Player 2: CHOKI -> Result: ${result1.result}</p>`;
+
+      // Example 2: Player 1: CHOKI, Player 2: PA
+      janken.setPlayer1Hand(Janken.Hand.CHOKI);
+      janken.setPlayer2Hand(Janken.Hand.PA);
+      let result2 = janken.playRound();
+      outputDiv.innerHTML += `<p>Player 1: CHOKI, Player 2: PA -> Result: ${result2.result}</p>`;
+
+      // Example 3: Player 1: PA, Player 2: GU
+      janken.setPlayer1Hand(Janken.Hand.PA);
+      janken.setPlayer2Hand(Janken.Hand.GU);
+      let result3 = janken.playRound();
+      outputDiv.innerHTML += `<p>Player 1: PA, Player 2: GU -> Result: ${result3.result}</p>`;
+
+      // Example 4: Player 1: GU, Player 2: GU
+      janken.setPlayer1Hand(Janken.Hand.GU);
+      janken.setPlayer2Hand(Janken.Hand.GU);
+      let result4 = janken.playRound();
+      outputDiv.innerHTML += `<p>Player 1: GU, Player 2: GU -> Result: ${result4.result}</p>`;
+
+    } catch (error) {
+      outputDiv.innerHTML += `<p style="color: red;">Error: ${error.message}</p>`;
+      console.error(error);
+    }
+  </script>
+</body>
+
+</html>

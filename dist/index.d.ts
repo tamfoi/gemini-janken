@@ -11,8 +11,9 @@ export declare enum Result {
 export declare enum JankenEvent {
     BeforeRound = "beforeRound",
     AfterRound = "afterRound",
-    Reset = "reset",
-    HandsNotSet = "handsNotSet"
+    GameStarted = "gameStarted",
+    HandsNotSet = "handsNotSet",
+    PlayerHandUpdated = "playerHandUpdated"
 }
 export declare enum GamePhase {
     Ready = "READY",
@@ -34,8 +35,10 @@ export declare class Janken {
     setPlayer1Hand(hand: Hand): void;
     setPlayer2Hand(hand: Hand): void;
     getLastResult(): Result | null;
-    reset(): void;
+    startGame(): void;
     getPlayer1Hand(): Hand | null;
     getPlayer2Hand(): Hand | null;
     getPhase(): GamePhase;
+    areHandsSet(): boolean;
+    private _determineWinner;
 }
