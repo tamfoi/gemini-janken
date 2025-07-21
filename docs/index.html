@@ -5,48 +5,122 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Janken Demo</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+
+    h1 {
+      color: #0056b3;
+    }
+
+    .game-container {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .hands button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    .hands button:hover {
+      background-color: #0056b3;
+    }
+
+    #result-display {
+      margin-top: 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #28a745;
+    }
+
+    #error-display {
+      color: red;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 
 <body>
   <h1>Janken Demo</h1>
-  <div id="output"></div>
+  <div class="game-container">
+    <p>Choose your hand:</p>
+    <div class="hands">
+      <button id="gu-btn">✊ GU</button>
+      <button id="choki-btn">✌️ CHOKI</button>
+      <button id="pa-btn">🖐️ PA</button>
+    </div>
+    <div id="result-display"></div>
+    <div id="error-display"></div>
+  </div>
 
   <script type="module">
-    import { Janken } from './index.js';
+    import { Janken, Hand, Result } from './index.js';
 
-    const outputDiv = document.getElementById('output');
+    const janken = new Janken();
+    const resultDisplay = document.getElementById('result-display');
+    const errorDisplay = document.getElementById('error-display');
 
-    try {
-      const janken = new Janken();
+    function playJanken(playerHand) {
+      errorDisplay.textContent = ''; // Clear previous errors
+      resultDisplay.textContent = ''; // Clear previous results
 
-      // Example 1: Player 1: GU, Player 2: CHOKI
-      janken.setPlayer1Hand(Janken.Hand.GU);
-      janken.setPlayer2Hand(Janken.Hand.CHOKI);
-      let result1 = janken.playRound();
-      outputDiv.innerHTML += `<p>Player 1: GU, Player 2: CHOKI -> Result: ${result1.result}</p>`;
+      // Simulate opponent's hand (random for demo)
+      const hands = [Hand.GU, Hand.CHOKI, Hand.PA];
+      const opponentHand = hands[Math.floor(Math.random() * hands.length)];
 
-      // Example 2: Player 1: CHOKI, Player 2: PA
-      janken.setPlayer1Hand(Janken.Hand.CHOKI);
-      janken.setPlayer2Hand(Janken.Hand.PA);
-      let result2 = janken.playRound();
-      outputDiv.innerHTML += `<p>Player 1: CHOKI, Player 2: PA -> Result: ${result2.result}</p>`;
+      try {
+        janken.setPlayer1Hand(playerHand);
+        janken.setPlayer2Hand(opponentHand);
+        const result = janken.playRound();
 
-      // Example 3: Player 1: PA, Player 2: GU
-      janken.setPlayer1Hand(Janken.Hand.PA);
-      janken.setPlayer2Hand(Janken.Hand.GU);
-      let result3 = janken.playRound();
-      outputDiv.innerHTML += `<p>Player 1: PA, Player 2: GU -> Result: ${result3.result}</p>`;
+        let resultText = `You chose: ${playerHand}, Opponent chose: ${opponentHand}. `;
+        if (result.result === Result.P1_WIN) {
+          resultText += 'You Win!';
+          resultDisplay.style.color = '#28a745';
+        } else if (result.result === Result.P2_WIN) {
+          resultText += 'You Lose!';
+          resultDisplay.style.color = '#dc3545';
+        } else {
+          resultText += 'Its a Draw!';
+          resultDisplay.style.color = '#ffc107';
+        }
+        resultDisplay.textContent = resultText;
 
-      // Example 4: Player 1: GU, Player 2: GU
-      janken.setPlayer1Hand(Janken.Hand.GU);
-      janken.setPlayer2Hand(Janken.Hand.GU);
-      let result4 = janken.playRound();
-      outputDiv.innerHTML += `<p>Player 1: GU, Player 2: GU -> Result: ${result4.result}</p>`;
-
-    } catch (error) {
-      outputDiv.innerHTML += `<p style="color: red;">Error: ${error.message}</p>`;
-      console.error(error);
+      } catch (error) {
+        errorDisplay.textContent = `Error: ${error.message}`;
+        console.error(error);
+      } finally {
+        // Reset for next round
+        janken.startGame();
+      }
     }
+
+    document.getElementById('gu-btn').addEventListener('click', () => playJanken(Hand.GU));
+    document.getElementById('choki-btn').addEventListener('click', () => playJanken(Hand.CHOKI));
+    document.getElementById('pa-btn').addEventListener('click', () => playJanken(Hand.PA));
+
+    // Initial game start to clear any previous state
+    janken.startGame();
   </script>
 </body>
 
