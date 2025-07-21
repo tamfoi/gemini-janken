@@ -28,6 +28,7 @@
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       text-align: center;
+      margin-bottom: 20px;
     }
 
     .hands button {
@@ -57,6 +58,39 @@
       color: red;
       margin-top: 10px;
     }
+
+    .info-box {
+      background-color: #e9ecef;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      width: 80%;
+      max-width: 600px;
+      text-align: left;
+    }
+
+    .info-box p {
+      margin: 5px 0;
+    }
+
+    .event-log {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      width: 80%;
+      max-width: 600px;
+      text-align: left;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #dee2e6;
+    }
+
+    .event-log p {
+      margin: 2px 0;
+      font-size: 0.9em;
+      color: #6c757d;
+    }
   </style>
 </head>
 
@@ -73,16 +107,82 @@
     <div id="error-display"></div>
   </div>
 
+  <div class="info-box">
+    <h2>Game State</h2>
+    <p>Current Phase: <span id="current-phase"></span></p>
+    <p>Player 1 Hand: <span id="player1-hand"></span></p>
+    <p>Player 2 Hand: <span id="player2-hand"></span></p>
+    <p>Hands Set: <span id="hands-set"></span></p>
+    <p>Last Result: <span id="last-result"></span></p>
+  </div>
+
+  <div class="event-log">
+    <h2>Event Log</h2>
+    <div id="log-content"></div>
+  </div>
+
   <script type="module">
-    import { Janken, Hand, Result } from './index.js';
+    import { Janken, Hand, Result, JankenEvent, GamePhase } from './index.js';
 
     const janken = new Janken();
     const resultDisplay = document.getElementById('result-display');
     const errorDisplay = document.getElementById('error-display');
+    const currentPhaseSpan = document.getElementById('current-phase');
+    const player1HandSpan = document.getElementById('player1-hand');
+    const player2HandSpan = document.getElementById('player2-hand');
+    const handsSetSpan = document.getElementById('hands-set');
+    const lastResultSpan = document.getElementById('last-result');
+    const logContentDiv = document.getElementById('log-content');
+
+    function updateGameStateDisplay() {
+      currentPhaseSpan.textContent = janken.getPhase();
+      player1HandSpan.textContent = janken.getPlayer1Hand() || 'Not Set';
+      player2HandSpan.textContent = janken.getPlayer2Hand() || 'Not Set';
+      handsSetSpan.textContent = janken.areHandsSet() ? 'Yes' : 'No';
+      lastResultSpan.textContent = janken.getLastResult() || 'None';
+    }
+
+    function logEvent(message) {
+      const p = document.createElement('p');
+      p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logContentDiv.prepend(p); // Add to top
+      if (logContentDiv.children.length > 50) {
+        logContentDiv.removeChild(logContentDiv.lastChild);
+      }
+    }
+
+    // Event Listeners
+    janken.on(JankenEvent.BeforeRound, () => {
+      logEvent('New round is about to start.');
+      updateGameStateDisplay();
+    });
+
+    janken.on(JankenEvent.AfterRound, (result) => {
+      logEvent(`Round ended. Result: ${result}`);
+      updateGameStateDisplay();
+    });
+
+    janken.on(JankenEvent.GameStarted, () => {
+      logEvent('Janken game started/reset.');
+      updateGameStateDisplay();
+    });
+
+    janken.on(JankenEvent.HandsNotSet, () => {
+      logEvent('Hands not set. Please set both players hands.');
+      updateGameStateDisplay();
+    });
+
+    janken.on(JankenEvent.PlayerHandUpdated, (playerNumber, hand) => {
+      logEvent(`Player ${playerNumber} hand set to ${hand}.`);
+      updateGameStateDisplay();
+    });
 
     function playJanken(playerHand) {
       errorDisplay.textContent = ''; // Clear previous errors
       resultDisplay.textContent = ''; // Clear previous results
+
+      // Reset game state before new round
+      janken.startGame();
 
       // Simulate opponent's hand (random for demo)
       const hands = [Hand.GU, Hand.CHOKI, Hand.PA];
@@ -91,36 +191,41 @@
       try {
         janken.setPlayer1Hand(playerHand);
         janken.setPlayer2Hand(opponentHand);
-        const result = janken.playRound();
 
-        let resultText = `You chose: ${playerHand}, Opponent chose: ${opponentHand}. `;
-        if (result.result === Result.P1_WIN) {
-          resultText += 'You Win!';
-          resultDisplay.style.color = '#28a745';
-        } else if (result.result === Result.P2_WIN) {
-          resultText += 'You Lose!';
-          resultDisplay.style.color = '#dc3545';
+        // Check if hands are set before playing round
+        if (janken.areHandsSet()) {
+          const result = janken.playRound();
+
+          let resultText = `You chose: ${playerHand}, Opponent chose: ${opponentHand}. `;
+          if (result.result === Result.P1_WIN) {
+            resultText += 'You Win!';
+            resultDisplay.style.color = '#28a745';
+          } else if (result.result === Result.P2_WIN) {
+            resultText += 'You Lose!';
+            resultDisplay.style.color = '#dc3545';
+          } else {
+            resultText += 'Its a Draw!';
+            resultDisplay.style.color = '#ffc107';
+          }
+          resultDisplay.textContent = resultText;
         } else {
-          resultText += 'Its a Draw!';
-          resultDisplay.style.color = '#ffc107';
+          errorDisplay.textContent = 'Error: Hands were not set correctly before playing round.';
         }
-        resultDisplay.textContent = resultText;
 
       } catch (error) {
         errorDisplay.textContent = `Error: ${error.message}`;
         console.error(error);
-      } finally {
-        // Reset for next round
-        janken.startGame();
       }
+      updateGameStateDisplay();
     }
 
     document.getElementById('gu-btn').addEventListener('click', () => playJanken(Hand.GU));
     document.getElementById('choki-btn').addEventListener('click', () => playJanken(Hand.CHOKI));
     document.getElementById('pa-btn').addEventListener('click', () => playJanken(Hand.PA));
 
-    // Initial game start to clear any previous state
-    janken.startGame();
+    // Initial display update
+    janken.startGame(); // Ensure initial state is READY and events are logged
+    updateGameStateDisplay();
   </script>
 </body>
 
